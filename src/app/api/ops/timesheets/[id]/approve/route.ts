@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id: paramId } = await params;
         const body = await request.json();
         const { stage, status, approvedBy } = body; // stage: 'supervisor' | 'finance' | 'hr'
-        const id = parseInt(params.id);
+        const id = parseInt(paramId);
 
         let updateData: any = {};
         const now = new Date();
