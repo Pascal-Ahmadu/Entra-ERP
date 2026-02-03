@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  phone          String
+  idType         String
+  idNumber       String
+  stateOfOrigin  String
+  hasPassport    Boolean  @default(false)
+  hasCredentials Boolean  @default(false)
+  role           String
+  dept           String
+  type           String   @default("Full-Time")
+  salary         String
+  pfa            String?
+  rsa            String?
+  hmo            String?
+  bloodGroup     String?
+  medicalCond    String?
+  proofOfLife    String?
+  uniqueTrait    String?
+  bank           String?
+  accountNo      String?
+  bvn            String?
+  nokName        String?
+  nokPhone       String?
+  status         String   @default("Active")
+  image          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model JobPosting {
+  id           Int           @id @default(autoincrement())
+  title        String
+  department   String
+  location     String
+  type         String        @default("Full-Time")
+  salary       String?
+  description  String
+  requirements String
+  status       String        @default("Open")
+  postedBy     String
+  applications Application[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Application {
+  id             Int        @id @default(autoincrement())
+  jobPostingId   Int
+  jobPosting     JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  candidateName  String
+  candidateEmail String
+  candidatePhone String
+  resume         String?
+  coverLetter    String?
+  status         String     @default("New")
+  score          Int?
+  notes          String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model ExpenseRequest {
+  id            Int     @id @default(autoincrement())
+  requestNumber String  @unique
+  staffName     String
+  staffEmail    String
+  department    String
+  category      String
+  amount        Float
+  description   String
+  purpose       String
+  attachments   String?
+
+  // Approval Workflow
+  status        String    @default("Pending HOD")
+  hodApproval   String?   @default("Pending")
+  hodApprovedBy String?
+  hodApprovedAt DateTime?
+  hodComments   String?
+
+  financeApproval   String?   @default("Pending")
+  financeApprovedBy String?
+  financeApprovedAt DateTime?
+  financeComments   String?
+
+  coeApproval   String?   @default("Pending")
+  coeApprovedBy String?
+  coeApprovedAt DateTime?
+  coeComments   String?
+
+  finalStatus     String    @default("Pending")
+  disbursedDate   DateTime?
+  disbursedAmount Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- ACCOUNTING / FINANCE MODULE ---
+
+model Account {
+  id       Int     @id @default(autoincrement())
+  code     String  @unique // e.g. "1001"
+  name     String // e.g. "Cash & Cash Equivalents"
+  type     String // Asset, Liability, Equity, Revenue, Expense
+  subType  String? // Non-Current Asset, Current Asset, etc.
+  category String? // For CashFlow: Operating, Investing, Financing
+  balance  Float   @default(0.0) // Cached balance or calculated on fly
+
+  journalLines JournalLine[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model JournalEntry {
+  id          Int           @id @default(autoincrement())
+  date        DateTime      @default(now())
+  description String
+  reference   String? // e.g. "EXP-001"
+  lines       JournalLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model JournalLine {
+  id             Int          @id @default(autoincrement())
+  journalEntryId Int
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id])
+  accountId      Int
+  account        Account      @relation(fields: [accountId], references: [id])
+
+  amount Float // Positive for Debit, Negative for Credit
+
+  createdAt DateTime @default(now())
+}

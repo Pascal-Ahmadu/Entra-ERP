@@ -1,0 +1,405 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client_v2"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id             Int              @id @default(autoincrement())
+  name           String
+  email          String           @unique
+  phone          String
+  idType         String
+  idNumber       String
+  stateOfOrigin  String
+  hasPassport    Boolean          @default(false)
+  hasCredentials Boolean          @default(false)
+  role           String
+  dept           String
+  type           String           @default("Full-Time")
+  salary         String
+  pfa            String?
+  rsa            String?
+  hmo            String?
+  bloodGroup     String?
+  medicalCond    String?
+  proofOfLife    String?
+  uniqueTrait    String?
+  bank           String?
+  accountNo      String?
+  bvn            String?
+  nokName        String?
+  nokPhone       String?
+  status         String           @default("Active")
+  image          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  clearances     StaffClearance[]
+}
+
+model JobPosting {
+  id           Int           @id @default(autoincrement())
+  title        String
+  department   String
+  location     String
+  type         String        @default("Full-Time")
+  salary       String?
+  description  String
+  requirements String
+  status       String        @default("Open")
+  postedBy     String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+}
+
+model Application {
+  id             Int        @id @default(autoincrement())
+  jobPostingId   Int
+  candidateName  String
+  candidateEmail String
+  candidatePhone String
+  resume         String?
+  coverLetter    String?
+  status         String     @default("New")
+  score          Int?
+  notes          String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  jobPosting     JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+}
+
+model ExpenseRequest {
+  id                Int       @id @default(autoincrement())
+  requestNumber     String    @unique
+  staffName         String
+  staffEmail        String
+  department        String
+  category          String
+  amount            Float
+  description       String
+  purpose           String
+  attachments       String?
+  status            String    @default("Pending HOD")
+  hodApproval       String?   @default("Pending")
+  hodApprovedBy     String?
+  hodApprovedAt     DateTime?
+  hodComments       String?
+  financeApproval   String?   @default("Pending")
+  financeApprovedBy String?
+  financeApprovedAt DateTime?
+  financeComments   String?
+  coeApproval       String?   @default("Pending")
+  coeApprovedBy     String?
+  coeApprovedAt     DateTime?
+  coeComments       String?
+  finalStatus       String    @default("Pending")
+  disbursedDate     DateTime?
+  disbursedAmount   Float?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Account {
+  id           Int           @id @default(autoincrement())
+  code         String        @unique
+  name         String
+  type         String
+  subType      String?
+  category     String?
+  balance      Float         @default(0.0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  journalLines JournalLine[]
+}
+
+model JournalEntry {
+  id          Int           @id @default(autoincrement())
+  date        DateTime      @default(now())
+  description String
+  reference   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  lines       JournalLine[]
+}
+
+model JournalLine {
+  id             Int          @id @default(autoincrement())
+  journalEntryId Int
+  accountId      Int
+  amount         Float
+  createdAt      DateTime     @default(now())
+  account        Account      @relation(fields: [accountId], references: [id])
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id])
+}
+
+model Invoice {
+  id            Int           @id @default(autoincrement())
+  invoiceNumber String        @unique
+  clientName    String
+  clientEmail   String
+  status        String        @default("DRAFT")
+  date          DateTime
+  dueDate       DateTime
+  totalAmount   Float         @default(0.0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  items         InvoiceItem[]
+}
+
+model InvoiceItem {
+  id          Int      @id @default(autoincrement())
+  invoiceId   Int
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Float
+  amount      Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model PayrollRun {
+  id            Int           @id @default(autoincrement())
+  month         Int
+  year          Int
+  status        String        @default("DRAFT")
+  totalGross    Float         @default(0)
+  totalPaye     Float         @default(0)
+  totalPension  Float         @default(0)
+  totalNhf      Float         @default(0)
+  totalNet      Float         @default(0)
+  employeeCount Int           @default(0)
+  processedBy   String?
+  processedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  lines         PayrollLine[]
+}
+
+model PayrollLine {
+  id            Int        @id @default(autoincrement())
+  payrollRunId  Int
+  employeeId    Int
+  employeeName  String
+  basicSalary   Float
+  allowances    Float      @default(0)
+  bonus         Float      @default(0)
+  cashBenefits  Float      @default(0)
+  grossPay      Float
+  cra           Float
+  taxableIncome Float
+  paye          Float
+  pension       Float
+  nhf           Float
+  netPay        Float
+  createdAt     DateTime   @default(now())
+  payrollRun    PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+}
+
+model LeaveRequest {
+  id           Int       @id @default(autoincrement())
+  employeeId   Int
+  employeeName String
+  type         String
+  startDate    DateTime
+  endDate      DateTime
+  days         Int
+  reason       String
+  status       String    @default("Pending")
+  approvedBy   String?
+  approvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model ForecastAssumption {
+  id               Int      @id @default(autoincrement())
+  revenueGrowth    Float    @default(5.0) // % Monthly Growth
+  expenseInflation Float    @default(2.0) // % Monthly Increase
+  headcountGrowth  Int      @default(0) // New hires per month
+  projectionMonths Int      @default(12) // How far to project
+  updatedAt        DateTime @updatedAt
+}
+
+model Project {
+  id         Int         @id @default(autoincrement())
+  name       String
+  client     String
+  status     String      @default("Planning") // Planning, In Progress, Completed
+  priority   String      @default("Medium") // Low, Medium, High
+  startDate  DateTime
+  endDate    DateTime
+  budget     Float       @default(0)
+  progress   Int         @default(0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  tasks      Task[]
+  timesheets Timesheet[]
+}
+
+model Task {
+  id         Int         @id @default(autoincrement())
+  projectId  Int
+  title      String
+  assignedTo String? // Employee Name
+  status     String      @default("Todo") // Todo, In Progress, Review, Done
+  dueDate    DateTime
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  timesheets Timesheet[]
+}
+
+model ResourceAllocation {
+  id          Int      @id @default(autoincrement())
+  employeeId  Int
+  projectId   Int
+  utilization Int      @default(100) // % of time
+  createdAt   DateTime @default(now())
+}
+
+model Asset {
+  id             Int        @id @default(autoincrement())
+  name           String
+  category       String // Electronics, Furniture, Vehicle, Machinery
+  serialNumber   String?    @unique
+  purchaseDate   DateTime
+  purchaseCost   Float
+  currentValue   Float
+  assignedTo     String? // Employee Name
+  status         String     @default("In Use") // In Use, Maintenance, Retired, Available, Disposed, Damaged
+  location       String // HQ, Warehouse A
+  tagNumber      String?    @unique
+  receiptUrl     String?
+  disposalDate   DateTime?
+  disposalType   String? // Sale, Scrap, Donation, Lost, Damaged
+  disposalReason String?
+  disposalValue  Float?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  incidents      Incident[]
+}
+
+model AssetRequest {
+  id              Int      @id @default(autoincrement())
+  requesterName   String
+  department      String?
+  category        String // Electronics, Furniture, etc.
+  description     String
+  urgency         String   @default("Medium") // Low, Medium, High
+  status          String   @default("Pending") // Pending, Approved, Rejected, Fulfilled
+  approvedBy      String?
+  rejectionReason String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Incident {
+  id          Int      @id @default(autoincrement())
+  assetId     Int
+  reportedBy  String // Employee Name
+  description String
+  date        DateTime @default(now())
+  status      String   @default("Open") // Open, In Progress, Resolved
+  resolution  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  asset       Asset    @relation(fields: [assetId], references: [id])
+}
+
+model StaffClearance {
+  id            Int      @id @default(autoincrement())
+  employeeId    Int
+  employeeName  String
+  requestDate   DateTime @default(now())
+  deptStatus    String   @default("Pending") // Pending, Cleared
+  assetStatus   String   @default("Pending") // Pending, Cleared (Checked against specific assets)
+  financeStatus String   @default("Pending") // Pending, Cleared
+  hrStatus      String   @default("Pending") // Pending, Cleared
+  finalStatus   String   @default("In Progress") // In Progress, Completed
+  remarks       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  employee      Employee @relation(fields: [employeeId], references: [id])
+}
+
+model TravelRequest {
+  id              Int      @id @default(autoincrement())
+  employeeId      Int
+  employeeName    String?
+  destination     String
+  purpose         String
+  travelDate      DateTime
+  returnDate      DateTime
+  estimatedCost   Float
+  advanceAmount   Float?   @default(0)
+  transportMode   String   @default("Flight") // Flight, Road, Train
+  status          String   @default("Pending") // Pending, Approved, Rejected
+  approvedBy      String?
+  rejectionReason String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Vehicle {
+  id          Int        @id @default(autoincrement())
+  plateNumber String     @unique
+  model       String
+  capacity    String // e.g. "5 Tons"
+  status      String     @default("Active") // Active, Maintenance, In Transit
+  driverName  String?
+  createdAt   DateTime   @default(now())
+  shipments   Shipment[]
+}
+
+model Shipment {
+  id                Int       @id @default(autoincrement())
+  trackingCode      String    @unique
+  origin            String
+  destination       String
+  vehicleId         Int?
+  driverName        String?
+  status            String    @default("Pending") // Pending, In Transit, Delivered
+  estimatedDelivery DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  vehicle           Vehicle?  @relation(fields: [vehicleId], references: [id])
+}
+
+model Timesheet {
+  id           Int      @id @default(autoincrement())
+  employeeId   Int
+  employeeName String
+  date         DateTime
+  hours        Float
+  description  String
+  projectId    Int?
+  taskId       Int?
+
+  // Multi-stage Approval
+  supervisorStatus String    @default("Pending")
+  supervisorBy     String?
+  supervisorAt     DateTime?
+
+  financeStatus String    @default("Pending")
+  financeBy     String?
+  financeAt     DateTime?
+
+  hrStatus String    @default("Pending")
+  hrBy     String?
+  hrAt     DateTime?
+
+  status String @default("Draft") // Draft, Submitted, Approved, Rejected
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  project Project? @relation(fields: [projectId], references: [id])
+  task    Task?    @relation(fields: [taskId], references: [id])
+}

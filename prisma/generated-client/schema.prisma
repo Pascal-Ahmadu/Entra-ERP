@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated-client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Employee {
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  phone          String
+  idType         String
+  idNumber       String
+  stateOfOrigin  String
+  hasPassport    Boolean  @default(false)
+  hasCredentials Boolean  @default(false)
+  role           String
+  dept           String
+  type           String   @default("Full-Time")
+  salary         String
+  pfa            String?
+  rsa            String?
+  hmo            String?
+  bloodGroup     String?
+  medicalCond    String?
+  proofOfLife    String?
+  uniqueTrait    String?
+  bank           String?
+  accountNo      String?
+  bvn            String?
+  nokName        String?
+  nokPhone       String?
+  status         String   @default("Active")
+  image          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
