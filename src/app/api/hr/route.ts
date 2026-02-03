@@ -60,11 +60,12 @@ export async function POST(request: Request) {
             data: newEmployee
         }, { status: 201 });
     } catch (error) {
-        console.error("Database error:", error);
-        // Check for unique constraint violation
-        if ((error as any).code === 'P2002') {
-            return NextResponse.json({ success: false, error: "Email already exists" }, { status: 400 });
-        }
-        return NextResponse.json({ success: false, error: "Failed to save data" }, { status: 500 });
+        console.error("Database error details:", error);
+        return NextResponse.json({
+            success: false,
+            error: "Failed to save data",
+            details: error instanceof Error ? error.message : "Unknown error",
+            code: (error as any).code
+        }, { status: 500 });
     }
 }
